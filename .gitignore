@@ -1,3 +1,10 @@
+# Custom
+Debug/
+Release/
+.settings
+.cproject
+.project
+
 # Prerequisites
 *.d
 
