@@ -50,6 +50,18 @@ void sendData(unsigned char data){
 	D_DATA_PORT = 0;
 }
 
+void setPositionXY(unsigned x, unsigned y){
+	sendCommand((0b10000000 | x) + (y ? 0x40 : 0));
+}
+
+void setPositionXX(unsigned x){
+	if(x>15){
+		setPositionXY(x%16, 1);
+	} else{
+		setPositionXY(x, 0);
+	}
+}
+
 void initDisplay(){
 	D_CONTROL_DIR |= 1 << D_ENABLE | 1 << D_RW | 1 << D_RS;
 	D_CONTROL_PORT &= ~(1 << D_ENABLE | 1 << D_RW | 1 << D_RS);

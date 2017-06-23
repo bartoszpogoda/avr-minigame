@@ -10,13 +10,19 @@
 
 #include "pinconfig.h"
 
+#define DISPLAY_SIZE 32
+
 void flashEnable();
 void waitBusy();
 
 void sendCommand(unsigned char command);
 void sendData(unsigned char data);
 
-void initDisplay();
+// x - column number 	{0,15}
+// y - row number 		{0,1}
+void setPositionXY(unsigned x, unsigned y);
+void setPositionXX(unsigned x);
 
+void initDisplay();
 
 #endif /* DISPLAY_H_ */
