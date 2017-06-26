@@ -19,10 +19,10 @@ typedef struct{
 	GraphicState previousState;
 } GraphicsEngine;
 
-void gInit(GraphicsEngine engine);
-void gClearPrevState(GraphicsEngine engine);
-void gRepaintClear(GraphicsEngine engine, GraphicState state);
-void gRepaintDiff(GraphicsEngine engine, GraphicState state);
-
+void gInit(GraphicsEngine* engine);
+void gClearPrevState(GraphicsEngine* engine);
+void gRepaintClear(GraphicsEngine* engine, GraphicState state);
+void gRepaintDiff(GraphicsEngine* engine, GraphicState state);
+GraphicState gGetClearState();
 
 #endif /* GRAPHICSENGINE_H_ */

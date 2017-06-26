@@ -11,24 +11,20 @@
 #include <stdlib.h>
 
 #include "display.h"
+#include "gameLogic.h"
 #include "graphicsEngine.h"
 
-int it = 0;
+GameState* gameState;
+GraphicsEngine* engine;
 
 ISR(INT0_vect){
-	_delay_ms(500);
-	it++;
-	if(it > 15){
-		it = 0;
-	}
+	_delay_ms(10);
+	onLeftButtonPress(gameState);
 }
 
 ISR(INT1_vect){
-	_delay_ms(500);
-	it--;
-	if(it < 0){
-		it = 15;
-	}
+	_delay_ms(10);
+	onRightButtonPress(gameState);
 }
 
 int main(void){
@@ -47,34 +43,30 @@ int main(void){
 
 	sei();				//Enable Global Interrupt
 
-	GraphicsEngine engine;
-	GraphicState state;
+	gameState = malloc(sizeof(GameState));
+	engine = malloc(sizeof(GraphicsEngine));
+
 
 	gInit(engine);
+	gameStart(gameState);
 
-	int i=0;
-	for(i = 0; i<16 ;i++){
-		state.ccodes[i] = 0b01000001;
-	}
-	for(; i<32 ;i++){
-		state.ccodes[i] = 0b00100000;
-	}
-
-	int counter = 0;
-	int counterRate = 10;
+	//int counter = 0;
+	//int counterRate = 10;
 
 	// repaint loop
 	while(1){
-		if(++counter % counterRate == 0){
-			state.ccodes[it] = state.ccodes[it] + 1;
-			// toggle state change blink
-			PORTB ^= 1 << 1;
+		//_delay_ms(300);
+		_delay_ms(133);
 
-		}
-		_delay_ms(50);
-		// toggle repaint blink
-		PORTB ^= 1 << 0;
-		gRepaintDiff(engine,state);
+		gameLoopIteration(gameState);
+		// toggle state change blink
+		PORTB ^= 1 << 1;
+
+		//if(++counter % counterRate == 0){
+			// toggle repaint blink
+			PORTB ^= 1 << 0;
+			onRedraw(engine, gameState);
+		//}
 	}
 }
 
