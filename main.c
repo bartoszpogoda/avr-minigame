@@ -16,17 +16,31 @@
 int it = 0;
 
 ISR(INT0_vect){
+	_delay_ms(500);
 	it++;
 	if(it > 15){
 		it = 0;
 	}
 }
 
+ISR(INT1_vect){
+	_delay_ms(500);
+	it--;
+	if(it < 0){
+		it = 15;
+	}
+}
+
 int main(void){
 
-	DDRD |= (1<<2);
-	GICR = 1<<INT0;					// Enable INT0
-	MCUCR = 1<<ISC01 | 1<<ISC00;	// Trigger INT0 on rising edge
+	DDRD |= 1<<PD2 | 1<<PD3;
+	PORTD |= 1<<PD2 | 1<<PD3;		// Enable PD2 pull-up resistor
+
+	GICR |= 1<<INT0;					// Enable INT0
+	MCUCR |= (1<<ISC01 | 1<<ISC00);	// Trigger INT0 on rising edge
+
+	GICR |= 1<<INT1;					// Enable INT1
+	MCUCR |= (1<<ISC11 | 1<<ISC10);	// Trigger INT1 on rising edge*/
 
 	DDRB |= 1 << 0;				// enable PORTB.0 for output (repaint blink)
 	DDRB |= 1 << 1;				// enable PORTB.1 for output (state change blink)

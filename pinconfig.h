@@ -11,9 +11,9 @@
 // LCD display config
 #define D_CONTROL_PORT 	PORTD
 #define D_CONTROL_DIR	DDRD
-#define D_ENABLE 0
-#define D_RW 1
-#define D_RS 3
+#define D_ENABLE 4
+#define D_RW 5
+#define D_RS 6
 
 #define D_DATA_PORT PORTC
 #define D_DATA_DIR	DDRC
