@@ -16,7 +16,13 @@ typedef struct{
 } GraphicState;
 
 typedef struct{
+	unsigned leds[LED_DISPLAY_SIZE];
+} LedDisplayState;
+
+
+typedef struct{
 	GraphicState previousState;
+	LedDisplayState previousLEDState;
 } GraphicsEngine;
 
 void gInit(GraphicsEngine* engine);
@@ -24,5 +30,9 @@ void gClearPrevState(GraphicsEngine* engine);
 void gRepaintClear(GraphicsEngine* engine, GraphicState state);
 void gRepaintDiff(GraphicsEngine* engine, GraphicState state);
 GraphicState gGetClearState();
+LedDisplayState gGetClearLEDState();
+
+void gRepaintLED(GraphicsEngine* engine, LedDisplayState state);
+
 
 #endif /* GRAPHICSENGINE_H_ */

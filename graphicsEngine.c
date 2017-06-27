@@ -8,8 +8,12 @@
 #include "graphicsEngine.h"
 #include "display.h"
 #include <avr/delay.h>
+#include <avr/io.h>
 
 void gInit(GraphicsEngine* engine){
+	//init LED
+	LED_DIR |= (1<<LED_0 | 1<<LED_1 | 1<<LED_2);
+
 	gClearPrevState(engine);
 	initDisplay();
 }
@@ -18,6 +22,12 @@ void gClearPrevState(GraphicsEngine* engine){
 	unsigned i = 0;
 	while(i ^ DISPLAY_SIZE){
 		engine->previousState.ccodes[i] = 0b00100000;	//empty character
+		i++;
+	}
+
+	i=0;
+	while(i ^ LED_DISPLAY_SIZE){
+		engine->previousLEDState.leds[i] = 0;
 		i++;
 	}
 }
@@ -64,4 +74,36 @@ GraphicState gGetClearState(){
 		i++;
 	}
 	return state;
+}
+
+LedDisplayState gGetClearLEDState(){
+	LedDisplayState state;
+	unsigned i = 0;
+	while(i ^ LED_DISPLAY_SIZE){
+		state.leds[i] = 0;
+		i++;
+	}
+	return state;
+}
+
+
+void gRepaintLED(GraphicsEngine* engine, LedDisplayState state){
+	unsigned i = 0;
+	while(i ^ LED_DISPLAY_SIZE){
+		if(state.leds[i] != engine->previousLEDState.leds[i]){
+			switch(i){
+				case 0:
+					LED_PORT ^= 1 << LED_0;
+					break;
+				case 1:
+					LED_PORT ^= 1 << LED_1;
+					break;
+				case 2:
+					LED_PORT ^= 1 << LED_2;
+					break;
+			}
+			engine->previousLEDState.leds[i] = state.leds[i];
+		}
+		i++;
+	}
 }

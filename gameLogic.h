@@ -14,6 +14,7 @@
 
 typedef struct{
 	unsigned playerPosition;
+	unsigned playerHealth;
 	unsigned playerJumptimeout;
 	unsigned barrelPosition;
 	int gameOverFlag;

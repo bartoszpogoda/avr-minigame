@@ -17,6 +17,8 @@
 GameState* gameState;
 GraphicsEngine* engine;
 
+int dbg = 0;
+
 ISR(INT0_vect){
 	_delay_ms(10);
 	onLeftButtonPress(gameState);
@@ -28,6 +30,8 @@ ISR(INT1_vect){
 }
 
 int main(void){
+
+	ADCSRA &= ~(1<<ADEN);
 
 	DDRD |= 1<<PD2 | 1<<PD3;
 	PORTD |= 1<<PD2 | 1<<PD3;		// Enable PD2 pull-up resistor
@@ -67,6 +71,7 @@ int main(void){
 			PORTB ^= 1 << 0;
 			onRedraw(engine, gameState);
 		//}
+
 	}
 }
 

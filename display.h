@@ -11,6 +11,7 @@
 #include "pinconfig.h"
 
 #define DISPLAY_SIZE 32
+#define LED_DISPLAY_SIZE 3
 
 void flashEnable();
 void waitBusy();

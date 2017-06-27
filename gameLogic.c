@@ -19,6 +19,7 @@ void gameStart(GameState* gs){
 	gs->playerPosition = 16;	// on ground
 	gs->playerJumptimeout = 0;
 	gs->gameOverFlag = 0;
+	gs->playerHealth = 3;
 
 	srand(1234);
 }
@@ -38,8 +39,13 @@ void gameLoopIteration(GameState* gs){
 
 	// barrel movement
 	gs->barrelPosition--;
-	if(gs->playerPosition == gs->barrelPosition)
-		gs->gameOverFlag = 1;
+	// player hit
+	if(gs->playerPosition == gs->barrelPosition){
+		gs->playerHealth--;
+		if(gs->playerHealth == 0){
+			gs->gameOverFlag = 1;
+		}
+	}
 
 	if(gs->barrelPosition == 15 || gs->barrelPosition == -1){
 		if(rand() % 2){	//restart barrel
@@ -86,6 +92,16 @@ void onRedraw(GraphicsEngine* gEngine, GameState* gs){
 	}
 
 	gRepaintDiff(gEngine,state);
+
+	// draw health
+	LedDisplayState healthDisplay = gGetClearLEDState();
+	int healthIterator = 0;
+	while(healthIterator < gs->playerHealth){
+		healthDisplay.leds[healthIterator] = 1;
+		healthIterator++;
+	}
+
+	gRepaintLED(gEngine, healthDisplay);
 }
 
 
