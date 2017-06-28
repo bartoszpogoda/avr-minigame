@@ -48,30 +48,23 @@ int main(void){
 	sei();				//Enable Global Interrupt
 
 	gameState = malloc(sizeof(GameState));
-	engine = malloc(sizeof(GraphicsEngine));
+	engine = graphicsEngineInit();
 
-
-	gInit(engine);
 	gameStart(gameState);
-
-	//int counter = 0;
-	//int counterRate = 10;
+	gameInitGraphics(gameState, engine);
 
 	// repaint loop
 	while(1){
-		//_delay_ms(300);
-		_delay_ms(133);
+		_delay_ms(150);
+		//_delay_ms(133);
 
 		gameLoopIteration(gameState);
 		// toggle state change blink
 		PORTB ^= 1 << 1;
 
-		//if(++counter % counterRate == 0){
-			// toggle repaint blink
-			PORTB ^= 1 << 0;
-			onRedraw(engine, gameState);
-		//}
-
+		onRedraw(engine, gameState);
+		// toggle repaint blink
+		PORTB ^= 1 << 0;
 	}
 }
 

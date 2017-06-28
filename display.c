@@ -76,3 +76,12 @@ void initDisplay(){
 	_delay_ms(50);
 }
 
+void sendAsset(unsigned pixelLines[8], unsigned id){
+	sendCommand(0b01000000 + id*8);
+	_delay_ms(5);
+	int i = 0;
+	for( ; i < 8 ; i++){
+		sendData(pixelLines[i]);
+	}
+}
+

@@ -9,88 +9,63 @@
 #include "display.h"
 #include <avr/delay.h>
 #include <avr/io.h>
+#include <stdlib.h>
 
-void gInit(GraphicsEngine* engine){
-	//init LED
+GraphicsEngine* graphicsEngineInit(){
+	//LED INIT
 	LED_DIR |= (1<<LED_0 | 1<<LED_1 | 1<<LED_2);
 
-	gClearPrevState(engine);
+	//LCD INIT
 	initDisplay();
+
+	//INIT ENGINE
+	GraphicsEngine* engine = malloc(sizeof(GraphicsEngine));
+	engine->assetsSize = 0;
+	clearStateAndBuffers(engine);
+	return engine;
 }
 
-void gClearPrevState(GraphicsEngine* engine){
-	unsigned i = 0;
-	while(i ^ DISPLAY_SIZE){
-		engine->previousState.ccodes[i] = 0b00100000;	//empty character
-		i++;
-	}
-
-	i=0;
-	while(i ^ LED_DISPLAY_SIZE){
-		engine->previousLEDState.leds[i] = 0;
-		i++;
-	}
+void prepareDraw(GraphicsEngine* engine, DrawableObject drawable, unsigned x, unsigned y){
+	engine->bufferMap.drawables[x + 16*y] = drawable;
 }
-
-void gRepaintClear(GraphicsEngine* engine, GraphicState state){
-	sendCommand(0x01); // clear
-	_delay_ms(5);
-	setPositionXY(0,0);
+void prepareDrawString(GraphicsEngine* engine, char* characters, int length, unsigned x, unsigned y){
 	int i = 0;
-	while(i ^ 16){
-		sendData(state.ccodes[i]);
-		engine->previousState.ccodes[i] = state.ccodes[i];
-		i++;
-	}
-	setPositionXY(0,1);
+	int curr_x = x;
+	int curr_y = y;
+	while(i ^ length){
+		prepareDraw(engine, characters[i], curr_x, curr_y);
 
-	i = 15;
-	while(i ^ 32){
-		sendData(state.ccodes[i]);
-		engine->previousState.ccodes[i] = state.ccodes[i];
-		i++;
-	}
-}
-
-void gRepaintDiff(GraphicsEngine* engine, GraphicState state){
-	_delay_ms(5);
-	int i = 0;
-	while(i ^ 32){
-		if(engine->previousState.ccodes[i] != state.ccodes[i]){
-			setPositionXX(i);
-			sendData(state.ccodes[i]);
+		curr_x++;
+		if(curr_x>15){
+			curr_x = 0;
+			curr_y++;
 		}
-		engine->previousState.ccodes[i] = state.ccodes[i];
 		i++;
 	}
 }
 
-
-GraphicState gGetClearState(){
-	GraphicState state;
-	unsigned i = 0;
-	while(i ^ DISPLAY_SIZE){
-		state.ccodes[i] = 0b00100000;	//empty character
-		i++;
-	}
-	return state;
+void prepareLEDDraw(GraphicsEngine* engine, int led){
+	engine->bufferLEDState.leds[led] = 1;
 }
 
-LedDisplayState gGetClearLEDState(){
-	LedDisplayState state;
-	unsigned i = 0;
-	while(i ^ LED_DISPLAY_SIZE){
-		state.leds[i] = 0;
+void executeDraw(GraphicsEngine* engine){
+	_delay_ms(5);
+	int i = 0;
+	while(i ^ 32){
+		if(engine->previousMap.drawables[i] != engine->bufferMap.drawables[i]){
+			setPositionXX(i);
+			sendData(engine->bufferMap.drawables[i]);
+		}
+		engine->previousMap.drawables[i] = engine->bufferMap.drawables[i];
+		engine->bufferMap.drawables[i] = EMPTY_DRAWABLE;
 		i++;
 	}
-	return state;
 }
 
-
-void gRepaintLED(GraphicsEngine* engine, LedDisplayState state){
+void executeLEDDraw(GraphicsEngine* engine){
 	unsigned i = 0;
 	while(i ^ LED_DISPLAY_SIZE){
-		if(state.leds[i] != engine->previousLEDState.leds[i]){
+		if(engine->bufferLEDState.leds[i] != engine->previousLEDState.leds[i]){
 			switch(i){
 				case 0:
 					LED_PORT ^= 1 << LED_0;
@@ -102,8 +77,31 @@ void gRepaintLED(GraphicsEngine* engine, LedDisplayState state){
 					LED_PORT ^= 1 << LED_2;
 					break;
 			}
-			engine->previousLEDState.leds[i] = state.leds[i];
 		}
+		engine->previousLEDState.leds[i] = engine->bufferLEDState.leds[i];
+		engine->bufferLEDState.leds[i] = 0;	//clr buffer
 		i++;
 	}
 }
+
+//TODO implement
+void loadAsset(GraphicsEngine* engine, Asset asset, DrawableObject id){
+	sendAsset(asset.pixelLines, id);
+}
+
+void clearStateAndBuffers(GraphicsEngine* engine){
+	unsigned i = 0;
+	while(i ^ DISPLAY_SIZE){
+		engine->previousMap.drawables[i] = EMPTY_DRAWABLE;
+		engine->bufferMap.drawables[i] = EMPTY_DRAWABLE;
+		i++;
+	}
+
+	i=0;
+	while(i ^ LED_DISPLAY_SIZE){
+		engine->previousLEDState.leds[i] = 0;
+		engine->bufferLEDState.leds[i] = 0;
+		i++;
+	}
+}
+

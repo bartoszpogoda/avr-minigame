@@ -24,6 +24,9 @@ void sendData(unsigned char data);
 void setPositionXY(unsigned x, unsigned y);
 void setPositionXX(unsigned x);
 
+// sends to id 0 asset
+void sendAsset(unsigned pixelLines[7], unsigned id);
+
 void initDisplay();
 
 #endif /* DISPLAY_H_ */

@@ -11,28 +11,54 @@
 #include "pinconfig.h"
 #include "display.h"
 
+#define EMPTY_DRAWABLE 0b00100000
+
+typedef unsigned DrawableObject;
+
+// DISPLAY STATES -------------------------
 typedef struct{
-	unsigned ccodes[DISPLAY_SIZE];
-} GraphicState;
+	DrawableObject drawables[DISPLAY_SIZE];
+} DrawableMap;
 
 typedef struct{
 	unsigned leds[LED_DISPLAY_SIZE];
-} LedDisplayState;
+} LEDState;
+//  ---------------------------------------
 
 
+// CUSTOM ASSETS --------------------------
 typedef struct{
-	GraphicState previousState;
-	LedDisplayState previousLEDState;
+	DrawableObject pixelLines[8];
+} Asset;
+//  ---------------------------------------
+
+
+// GRAPHIC ENGINE OBJECT-------------------
+typedef struct{
+	DrawableMap previousMap;
+	DrawableMap	bufferMap;
+
+	LEDState previousLEDState;
+	LEDState bufferLEDState;
+
+	Asset* assets;
+	unsigned assetsSize;
 } GraphicsEngine;
+//  ---------------------------------------
 
-void gInit(GraphicsEngine* engine);
-void gClearPrevState(GraphicsEngine* engine);
-void gRepaintClear(GraphicsEngine* engine, GraphicState state);
-void gRepaintDiff(GraphicsEngine* engine, GraphicState state);
-GraphicState gGetClearState();
-LedDisplayState gGetClearLEDState();
+// new interface
+GraphicsEngine* graphicsEngineInit();
 
-void gRepaintLED(GraphicsEngine* engine, LedDisplayState state);
+void prepareDraw(GraphicsEngine* engine, DrawableObject, unsigned x, unsigned y);
+void prepareDrawString(GraphicsEngine* engine, char* characters, int length, unsigned x, unsigned y);
 
+void prepareLEDDraw(GraphicsEngine* engine, int led);
+
+void executeDraw(GraphicsEngine* engine);
+void executeLEDDraw(GraphicsEngine* engine);
+
+void loadAsset(GraphicsEngine*, Asset, DrawableObject);
+
+void clearStateAndBuffers(GraphicsEngine* engine);
 
 #endif /* GRAPHICSENGINE_H_ */

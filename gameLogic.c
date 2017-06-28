@@ -16,12 +16,69 @@ void gameStart(GameState* gs){
 		gs->barrelPosition = 31;
 	}
 
-	gs->playerPosition = 16;	// on ground
+	gs->playerPosition = 0;	// on ground
 	gs->playerJumptimeout = 0;
 	gs->gameOverFlag = 0;
 	gs->playerHealth = 3;
 
+
+	gs->anGlobalCounter = 0;
+	gs->anBarrelFrame = 0;
+	gs->anBarrelFreq = 2;
+
 	srand(1234);
+}
+
+void gameInitGraphics(GameState* gs, GraphicsEngine* gEngine){
+
+	gs->doPlayerStanding = 0;
+	Asset assPlayerStanding;
+	assPlayerStanding.pixelLines[0] = 0b00000;
+	assPlayerStanding.pixelLines[1] = 0b00100;
+	assPlayerStanding.pixelLines[2] = 0b00000;
+	assPlayerStanding.pixelLines[3] = 0b11111;
+	assPlayerStanding.pixelLines[4] = 0b11011;
+	assPlayerStanding.pixelLines[5] = 0b10101;
+	assPlayerStanding.pixelLines[6] = 0b01010;
+	assPlayerStanding.pixelLines[7] = 0b01010;
+	loadAsset(gEngine, assPlayerStanding, gs->doPlayerStanding);
+
+	gs->doPlayerJumping = 1;
+	Asset assPlayerJumping;
+	assPlayerJumping.pixelLines[0] = 0b00100;
+	assPlayerJumping.pixelLines[1] = 0b00000;
+	assPlayerJumping.pixelLines[2] = 0b11111;
+	assPlayerJumping.pixelLines[3] = 0b11011;
+	assPlayerJumping.pixelLines[4] = 0b10101;
+	assPlayerJumping.pixelLines[5] = 0b01010;
+	assPlayerJumping.pixelLines[6] = 0b00000;
+	assPlayerJumping.pixelLines[7] = 0b00000;
+	loadAsset(gEngine, assPlayerJumping, gs->doPlayerJumping);
+
+	gs->doBarrelAnim0 = 2;
+	Asset assBarrelAnim0;
+	assBarrelAnim0.pixelLines[0] = 0b00000;
+	assBarrelAnim0.pixelLines[1] = 0b00000;
+	assBarrelAnim0.pixelLines[2] = 0b00000;
+	assBarrelAnim0.pixelLines[3] = 0b00000;
+	assBarrelAnim0.pixelLines[4] = 0b00110;
+	assBarrelAnim0.pixelLines[5] = 0b01111;
+	assBarrelAnim0.pixelLines[6] = 0b01111;
+	assBarrelAnim0.pixelLines[7] = 0b00110;
+	loadAsset(gEngine, assBarrelAnim0, gs->doBarrelAnim0);
+
+	gs->doBarrelAnim1 = 3;
+	Asset doBarrelAnim1;
+	doBarrelAnim1.pixelLines[0] = 0b00000;
+	doBarrelAnim1.pixelLines[1] = 0b00000;
+	doBarrelAnim1.pixelLines[2] = 0b00000;
+	doBarrelAnim1.pixelLines[3] = 0b00110;
+	doBarrelAnim1.pixelLines[4] = 0b01111;
+	doBarrelAnim1.pixelLines[5] = 0b01111;
+	doBarrelAnim1.pixelLines[6] = 0b00110;
+	doBarrelAnim1.pixelLines[7] = 0b00000;
+	loadAsset(gEngine, doBarrelAnim1, gs->doBarrelAnim1);
+
 }
 
 void gameLoopIteration(GameState* gs){
@@ -33,14 +90,14 @@ void gameLoopIteration(GameState* gs){
 		gs->playerJumptimeout--;
 
 		if(gs->playerJumptimeout == 0){
-			gs->playerPosition = 16;
+			gs->playerPosition = 0;
 		}
 	}
 
 	// barrel movement
 	gs->barrelPosition--;
 	// player hit
-	if(gs->playerPosition == gs->barrelPosition){
+	if((gs->playerPosition == 0 && gs->barrelPosition == 15) || (gs->playerPosition == 1 && gs->barrelPosition == 0)){
 		gs->playerHealth--;
 		if(gs->playerHealth == 0){
 			gs->gameOverFlag = 1;
@@ -59,7 +116,7 @@ void gameLoopIteration(GameState* gs){
 void onLeftButtonPress(GameState* gs){
 	if(gs->playerJumptimeout == 0){
 		gs->playerJumptimeout = JUMP_TIMEOUT;
-		gs->playerPosition = 0;
+		gs->playerPosition = 1;
 	}
 }
 
@@ -69,39 +126,43 @@ void onRightButtonPress(GameState* gs){
 
 void onRedraw(GraphicsEngine* gEngine, GameState* gs){
 
-	GraphicState state = gGetClearState();
-
 	if(gs->gameOverFlag){
-		state.ccodes[0] = 'G';
-		state.ccodes[1] = 'O';
-		state.ccodes[2] = '!';
+		char* gameOverString = "Game over";
+		char* gameOverString1 = "You noob...";
+
+		prepareDrawString(gEngine, gameOverString, 9, 0,0);
+		prepareDrawString(gEngine, gameOverString1, 11, 3,1);
 
 	} else{
+		gs->anGlobalCounter++;
+
 		// draw player
-		if(gs->playerPosition == 16)
-			state.ccodes[16] = 'X';
+		if(gs->playerPosition == 0)
+			prepareDraw(gEngine,gs->doPlayerStanding,0,1);
 		else
-			state.ccodes[0] = 'X';
+			prepareDraw(gEngine,gs->doPlayerJumping,0,0);
 
 		// draw barrel
-		int i;
-		for(i = 0; i<32 ;i++){
-			if(gs->barrelPosition == i)
-				state.ccodes[i] = 'O';
+		if(gs->anGlobalCounter % gs->anBarrelFreq == 0){
+			gs->anBarrelFrame = (gs->anBarrelFrame ? 0 : 1);
+		}
+		if(gs->anBarrelFrame == 0){
+			prepareDraw(gEngine,gs->doBarrelAnim0,gs->barrelPosition%16,gs->barrelPosition/16);
+		} else{
+			prepareDraw(gEngine,gs->doBarrelAnim1,gs->barrelPosition%16,gs->barrelPosition/16);
 		}
 	}
 
-	gRepaintDiff(gEngine,state);
+	executeDraw(gEngine);
 
 	// draw health
-	LedDisplayState healthDisplay = gGetClearLEDState();
 	int healthIterator = 0;
 	while(healthIterator < gs->playerHealth){
-		healthDisplay.leds[healthIterator] = 1;
+		prepareLEDDraw(gEngine, healthIterator);
 		healthIterator++;
 	}
 
-	gRepaintLED(gEngine, healthDisplay);
+	executeLEDDraw(gEngine);
 }
 
 

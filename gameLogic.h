@@ -10,9 +10,19 @@
 
 #include "graphicsEngine.h"
 
-#define JUMP_TIMEOUT 3
+#define JUMP_TIMEOUT 4
 
 typedef struct{
+	DrawableObject doPlayerStanding;
+	DrawableObject doPlayerJumping;
+	DrawableObject doBarrelAnim0;
+	DrawableObject doBarrelAnim1;
+
+	int anGlobalCounter;
+
+	int anBarrelFrame;
+	int anBarrelFreq;
+
 	unsigned playerPosition;
 	unsigned playerHealth;
 	unsigned playerJumptimeout;
@@ -21,6 +31,8 @@ typedef struct{
 } GameState;
 
 void gameStart(GameState* gs);
+
+void gameInitGraphics(GameState* gs, GraphicsEngine* gEngine);
 
 void gameLoopIteration(GameState* gs);
 
