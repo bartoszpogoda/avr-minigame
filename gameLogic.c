@@ -10,20 +10,23 @@
 #include <stdlib.h>
 
 void gameStart(GameState* gs){
-	if(rand() % 2){
-		gs->barrelPosition = 15;
-	} else{
-		gs->barrelPosition = 31;
+	gs->barrelsSize = 2;
+	int i;
+	for(i=0;i<gs->barrelsSize;i++){
+		gs->barrels[i].barrelPosition = -30;
+		gs->barrels[i].barrelDirection = 0;
+		gs->barrels[i].anBarrelFrame = 0;
+		gs->barrels[i].inGame = 0;
 	}
 
-	gs->playerPosition = 0;	// on ground
+	gs->playerInAirFlag = 0;	// on ground
+	gs->playerPosition = 7;	// left side of range in the middle 7-8
 	gs->playerJumptimeout = 0;
 	gs->gameOverFlag = 0;
 	gs->playerHealth = 3;
 
 
 	gs->anGlobalCounter = 0;
-	gs->anBarrelFrame = 0;
 	gs->anBarrelFreq = 2;
 
 	srand(1234);
@@ -90,38 +93,52 @@ void gameLoopIteration(GameState* gs){
 		gs->playerJumptimeout--;
 
 		if(gs->playerJumptimeout == 0){
-			gs->playerPosition = 0;
+			gs->playerInAirFlag = 0;
 		}
 	}
 
-	// barrel movement
-	gs->barrelPosition--;
-	// player hit
-	if((gs->playerPosition == 0 && gs->barrelPosition == 15) || (gs->playerPosition == 1 && gs->barrelPosition == 0)){
-		gs->playerHealth--;
-		if(gs->playerHealth == 0){
-			gs->gameOverFlag = 1;
+	// barrels routines
+	int i;
+	for(i=0;i<gs->barrelsSize && gs->barrels[i].inGame;i++){
+		if(gs->barrels[i].inGame == 0) continue;
+		// barrel movement
+		gs->barrels[i].barrelPosition += gs->barrels[i].barrelDirection;
+
+		// player hit
+		if(gs->playerInAirFlag == 0 && gs->playerPosition == gs->barrels[i].barrelPosition){
+			gs->playerHealth--;
+			if(gs->playerHealth == 0){
+				gs->gameOverFlag = 1;
+			}
+		}
+
+		// out of map check
+		if(gs->barrels[i].barrelPosition < 0 || gs->barrels[i].barrelPosition > 15){
+				gs->barrels[i].inGame = 0;
 		}
 	}
 
-	if(gs->barrelPosition == 15 || gs->barrelPosition == -1){
-		if(rand() % 2){	//restart barrel
-			gs->barrelPosition = 15;
-		} else{
-			gs->barrelPosition = 31;
+	// barrel spawning
+	for(i=0;i<gs->barrelsSize;i++){
+		if(gs->barrels[i].inGame == 1) continue;
+		if(rand() % 100 < BARREL_SPAWN_PROB){
+			gs->barrels[i].barrelDirection = rand() % 2 ? 1 : -1;
+			gs->barrels[i].barrelPosition = gs->barrels[i].barrelDirection == 1 ? 0 : 15;
+			gs->barrels[i].inGame = 1;
 		}
 	}
+
 }
 
 void onLeftButtonPress(GameState* gs){
 	if(gs->playerJumptimeout == 0){
 		gs->playerJumptimeout = JUMP_TIMEOUT;
-		gs->playerPosition = 1;
+		gs->playerInAirFlag = 1;
 	}
 }
 
 void onRightButtonPress(GameState* gs){
-	//NOP
+	gs->playerPosition = gs->playerPosition == 7 ? 8 : 7;
 }
 
 void onRedraw(GraphicsEngine* gEngine, GameState* gs){
@@ -137,20 +154,25 @@ void onRedraw(GraphicsEngine* gEngine, GameState* gs){
 		gs->anGlobalCounter++;
 
 		// draw player
-		if(gs->playerPosition == 0)
-			prepareDraw(gEngine,gs->doPlayerStanding,0,1);
+		if(gs->playerInAirFlag == 0)
+			prepareDraw(gEngine,gs->doPlayerStanding,gs->playerPosition,1);
 		else
-			prepareDraw(gEngine,gs->doPlayerJumping,0,0);
+			prepareDraw(gEngine,gs->doPlayerJumping,gs->playerPosition,0);
+
 
 		// draw barrel
-		if(gs->anGlobalCounter % gs->anBarrelFreq == 0){
-			gs->anBarrelFrame = (gs->anBarrelFrame ? 0 : 1);
+		int i;
+		for(i=0;i<gs->barrelsSize && gs->barrels[i].inGame;i++){
+			if(gs->anGlobalCounter % gs->anBarrelFreq == 0){
+				gs->barrels[i].anBarrelFrame = (gs->barrels[i].anBarrelFrame ? 0 : 1);
+			}
+			if(gs->barrels[i].anBarrelFrame == 0){
+				prepareDraw(gEngine,gs->doBarrelAnim0,gs->barrels[i].barrelPosition,1);
+			} else{
+				prepareDraw(gEngine,gs->doBarrelAnim1,gs->barrels[i].barrelPosition,1);
+			}
 		}
-		if(gs->anBarrelFrame == 0){
-			prepareDraw(gEngine,gs->doBarrelAnim0,gs->barrelPosition%16,gs->barrelPosition/16);
-		} else{
-			prepareDraw(gEngine,gs->doBarrelAnim1,gs->barrelPosition%16,gs->barrelPosition/16);
-		}
+
 	}
 
 	executeDraw(gEngine);

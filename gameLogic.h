@@ -11,6 +11,14 @@
 #include "graphicsEngine.h"
 
 #define JUMP_TIMEOUT 4
+#define BARREL_SPAWN_PROB 30
+
+typedef struct{
+	int barrelPosition;
+	int barrelDirection;
+	int anBarrelFrame;
+	int inGame;
+} Barrel;
 
 typedef struct{
 	DrawableObject doPlayerStanding;
@@ -19,14 +27,16 @@ typedef struct{
 	DrawableObject doBarrelAnim1;
 
 	int anGlobalCounter;
-
-	int anBarrelFrame;
 	int anBarrelFreq;
 
+	unsigned playerInAirFlag;
 	unsigned playerPosition;
 	unsigned playerHealth;
 	unsigned playerJumptimeout;
-	unsigned barrelPosition;
+
+	Barrel barrels[2];
+	int barrelsSize;
+
 	int gameOverFlag;
 } GameState;
 

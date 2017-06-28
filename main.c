@@ -57,6 +57,7 @@ int main(void){
 	while(1){
 		_delay_ms(150);
 		//_delay_ms(133);
+		//_delay_ms(250);
 
 		gameLoopIteration(gameState);
 		// toggle state change blink
